@@ -2,13 +2,13 @@ from typing import TypeVar
 import logging
 from sqlmodel import create_engine
 from dataclasses import dataclass
-from .tableaccess import TableAccess, setEngine
+from .tableAccess import TableAccess, setEngine
 
 log = logging.getLogger(__name__)
 
 Cls = TypeVar('Cls')
 
-class RDbAccess:
+class RdbAccess:
     def __init__(self):
         self.engine = None
         self.tables = {}
@@ -19,7 +19,6 @@ class RDbAccess:
         #     'check_same_thread': False
         # }
         self.engine = create_engine(url)
-        setEngine(self.engine)
 
     def addTable[TDb, TPublic, TCreate, TUpdate](self, 
                                                  tablename: str, 
@@ -42,7 +41,7 @@ class RDbAccess:
         tcreate = table.TCreate
         data = None
         if table is not None:
-            data = table.create(tcreate(**keyValues))
+            data = table.create(tcreate(**keyValues), engine=self.engine)
         else:
             log.warning(f'  Cannot create entry in table {tablename}, table not found')
         return data
@@ -51,7 +50,7 @@ class RDbAccess:
         table = self.getTable(tablename)
         data = None
         if table is not None:
-            data = table.get(id)
+            data = table.get(id, engine=self.engine)
         else:
             log.warning(f'  Cannot get entry {id} in table {tablename}, table not found')
         return data
@@ -62,7 +61,7 @@ class RDbAccess:
         log.info(f'call getall: {table}')
         if table is not None:
             log.info(f'call getall: {tablename}')
-            data = table.getall(selectModifier, offset, limit)
+            data = table.getall(selectModifier, engine=self.engine, offset, limit)
         else:
             log.warning(f'  Cannot get entries in table {tablename}, table not found')
         return data
@@ -71,7 +70,7 @@ class RDbAccess:
         table = self.getTable(tablename)
         data = None
         if table is not None:
-            data = table.getone(selectModifier)
+            data = table.getone(selectModifier, engine=self.engine)
         else:
             log.warning(f'  Cannot get entries in table {tablename}, table not found')
         return data
@@ -81,7 +80,7 @@ class RDbAccess:
         TUpdate = table.TUpdate
         data = None
         if table is not None:
-            data = table.update(id, TUpdate(**keyValues))
+            data = table.update(id, TUpdate(**keyValues), engine=self.engine)
         else:
             log.warning(f'  Cannot update entry {id} in table {tablename}, table not found')
         return data
@@ -89,7 +88,7 @@ class RDbAccess:
     def delete(self, tablename: str, id: int):
         table = self.getTable(tablename)
         if table is not None:
-            table.delete(id)
+            table.delete(id, engine=self.engine)
         else:
             log.warning(f'  Cannot get entry {id} in table {tablename}, table not found')
         return 0

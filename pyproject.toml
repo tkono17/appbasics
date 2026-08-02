@@ -8,6 +8,7 @@ description = "Basic tools for developing applications"
 readme = "README.md"
 dependencies = [
     "typer",
+    "sqlmodel",
     "build",
     "twine"
 ]
