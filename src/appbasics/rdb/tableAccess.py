@@ -20,7 +20,7 @@ class TableAccess[TDb, TPublic, TCreate, TUpdate]:
                  tcreate: type[TCreate], 
                  tupdate: type[TUpdate]):
         self.TDb = tdb
-        self.TPublic = bpublic
+        self.TPublic = tpublic
         self.TCreate = tcreate
         self.TUpdate = tupdate
 

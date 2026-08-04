@@ -1,4 +1,4 @@
-from typing import TypeVar
+from typing import TypeVar, Any
 import logging
 from sqlmodel import create_engine
 from dataclasses import dataclass
@@ -30,13 +30,13 @@ class RdbAccess:
         if tupdate is None: tupdate = tdb
         self.tables[tablename] = TableAccess(tdb, tpublic, tcreate, tupdate)
         
-    def getTable(self, tablename):
+    def getTable(self, tablename: str) -> TableAccess|None:
         table = None
         if tablename in self.tables.keys():
             table = self.tables[tablename]
         return table
         
-    def create(self, tablename, keyValues):
+    def create(self, tablename: str, keyValues: dict[str, Any]):
         table = self.getTable(tablename)
         tcreate = table.TCreate
         data = None
