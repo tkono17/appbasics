@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
-from sqlmodel import Session, select, Engine
+from sqlmodel import Session, select
+from sqlalchemy import Engine
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class TableAccess[TDb, TPublic, TCreate, TUpdate]:
             log.info(f'  created {data_db}')
         return data_db
 
-    def get(self, id: int, engine: Engine) -> TPublic:
+    def get(self, id: int, engine: Engine) -> TPublic|None:
         data = None
         with Session(engine) as session:
             data = session.get(self.TDb, id)
@@ -66,10 +67,11 @@ class TableAccess[TDb, TPublic, TCreate, TUpdate]:
         return x
     
     def update(self, id: int, data: TUpdate, engine: Engine) -> TPublic:
-        data_db = self.get(id)
+        data_db = self.get(id, engine=engine)
         if data_db is None:
             log.warning(f'Entry id={id} not found in {self.TDb.__name__}')
             return None
+        #data_update = dict(filter(lambda x: x[1] is not None, data.model_dump(exclude_unset=True).items()))
         data_update = data.model_dump(exclude_unset=True)
         data_db.sqlmodel_update(data_update)
         with Session(engine) as session:
@@ -79,7 +81,7 @@ class TableAccess[TDb, TPublic, TCreate, TUpdate]:
         return data_db
     
     def delete(self, id: int, engine: Engine) -> Optional[int]:
-        data_db = self.get(id)
+        data_db = self.get(id, engine=engine)
         if data_db is None:
             log.warning(f'Entry id={id} not found in {self.TDb.__name__}')
             return None

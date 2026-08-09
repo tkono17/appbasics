@@ -1,10 +1,13 @@
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar
 import logging
-from sqlmodel import create_engine, Statement
+from sqlmodel import create_engine
+from sqlalchemy import Select, Engine
 from dataclasses import dataclass
 from .tableAccess import TableAccess
 
 log = logging.getLogger(__name__)
+
+T = TypeVar('T')
 
 class RdbAccess:
     def __init__(self):
@@ -55,19 +58,19 @@ class RdbAccess:
         return data
 
     def getall(self, tablename: str, 
-               selectModifier: Callable[[Statement], Statement]|None = None, 
+               selectModifier: Callable[[Select[T]], Select[T]]|None = None, 
                offset: int=0, limit: int=100) -> list[Any]|None:
         table = self.getTable(tablename)
         data = None
         log.info(f'call getall: {table}')
         if table is not None:
             log.info(f'call getall: {tablename}')
-            data = table.getall(selectModifier, engine=self.engine, offset=offset, limit=limit)
+            data = table.getall(self.engine, selectModifier, offset=offset, limit=limit)
         else:
             log.warning(f'  Cannot get entries in table {tablename}, table not found')
         return data
 
-    def getone(self, tablename: str, selectModifier: Callable[[Statement], Statement]|None = None):
+    def getone(self, tablename: str, selectModifier: Callable[[Select[T]], Select[T]]|None = None):
         table = self.getTable(tablename)
         data = None
         if table is not None:
