@@ -1,6 +1,6 @@
-from typing import TypeVar
+from typing import Any, Callable
 import logging
-from sqlmodel import create_engine
+from sqlmodel import create_engine, Statement
 from dataclasses import dataclass
 from .tableAccess import TableAccess, setEngine
 
@@ -30,13 +30,13 @@ class RdbAccess:
         if tupdate is None: tupdate = tdb
         self.tables[tablename] = TableAccess(tdb, tpublic, tcreate, tupdate)
         
-    def getTable(self, tablename):
+    def getTable(self, tablename: str):
         table = None
         if tablename in self.tables.keys():
             table = self.tables[tablename]
         return table
         
-    def create(self, tablename, keyValues):
+    def create(self, tablename: str, keyValues: dict[str, Any]) -> Any|None:
         table = self.getTable(tablename)
         tcreate = table.TCreate
         data = None
@@ -46,7 +46,7 @@ class RdbAccess:
             log.warning(f'  Cannot create entry in table {tablename}, table not found')
         return data
 
-    def get(self, tablename: str, id: int):
+    def get(self, tablename: str, id: int) -> Any|None:
         table = self.getTable(tablename)
         data = None
         if table is not None:
@@ -55,18 +55,20 @@ class RdbAccess:
             log.warning(f'  Cannot get entry {id} in table {tablename}, table not found')
         return data
 
-    def getall(self, tablename: str, selectModifier=None, offset: int=0, limit: int=100):
+    def getall(self, tablename: str, 
+               selectModifier: Callable[[Statement], Statement]|None = None, 
+               offset: int=0, limit: int=100) -> list[Any]|None:
         table = self.getTable(tablename)
         data = None
         log.info(f'call getall: {table}')
         if table is not None:
             log.info(f'call getall: {tablename}')
-            data = table.getall(selectModifier, engine=self.engine, offset, limit)
+            data = table.getall(selectModifier, engine=self.engine, offset=offset, limit=limit)
         else:
             log.warning(f'  Cannot get entries in table {tablename}, table not found')
         return data
 
-    def getone(self, tablename: str, selectModifier=None):
+    def getone(self, tablename: str, selectModifier: Callable[[Statement], Statement]|None = None):
         table = self.getTable(tablename)
         data = None
         if table is not None:
@@ -75,7 +77,7 @@ class RdbAccess:
             log.warning(f'  Cannot get entries in table {tablename}, table not found')
         return data
 
-    def update(self, tablename, id, keyValues):
+    def update(self, tablename: str, id: int, keyValues: dict[str, Any]) -> Any|None:
         table = self.getTable(tablename)
         TUpdate = table.TUpdate
         data = None
