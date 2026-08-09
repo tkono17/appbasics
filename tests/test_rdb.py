@@ -20,4 +20,3 @@ class PersonUpdate(PersonBase):
 
 def test_person():
     table = ab.TableAccess(Person, PersonPublic, PersonCreate, PersonUpdate)
-    

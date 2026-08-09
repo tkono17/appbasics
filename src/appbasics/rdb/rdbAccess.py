@@ -2,11 +2,9 @@ from typing import Any, Callable
 import logging
 from sqlmodel import create_engine, Statement
 from dataclasses import dataclass
-from .tableAccess import TableAccess, setEngine
+from .tableAccess import TableAccess
 
 log = logging.getLogger(__name__)
-
-Cls = TypeVar('Cls')
 
 class RdbAccess:
     def __init__(self):
@@ -30,13 +28,14 @@ class RdbAccess:
         if tupdate is None: tupdate = tdb
         self.tables[tablename] = TableAccess(tdb, tpublic, tcreate, tupdate)
         
-    def getTable(self, tablename: str):
+    def getTable(self, tablename: str) -> TableAccess|None:
         table = None
         if tablename in self.tables.keys():
             table = self.tables[tablename]
         return table
         
     def create(self, tablename: str, keyValues: dict[str, Any]) -> Any|None:
+
         table = self.getTable(tablename)
         tcreate = table.TCreate
         data = None
