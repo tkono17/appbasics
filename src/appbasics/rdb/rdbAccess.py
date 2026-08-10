@@ -74,7 +74,7 @@ class RdbAccess:
         table = self.getTable(tablename)
         data = None
         if table is not None:
-            data = table.getone(selectModifier, engine=self.engine)
+            data = table.getone(engine=self.engine, selectModifier=selectModifier)
         else:
             log.warning(f'  Cannot get entries in table {tablename}, table not found')
         return data

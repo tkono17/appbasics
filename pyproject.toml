@@ -10,7 +10,9 @@ dependencies = [
     "dotenv",
     "typer",
     "sqlmodel",
+    "fire",
     "build",
+    "import-linter",
     "twine"
 ]
 [build-system]
@@ -19,6 +21,7 @@ build-backend = "hatchling.build"
 
 [project.scripts]
 apb-managedb = "appbasics.cli.managedb:main"
+dbapp-run = "appbasics.cli.dbappRun:main"
 
 [tool.hatch.build.targets.wheel]
 packages = [ "src/appbasics" ]

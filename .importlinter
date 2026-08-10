@@ -1,0 +1,14 @@
+[importlinter]
+root_package = appbasics
+source_dir = src
+
+[importlinter:contract:layered_architecture]
+name = Layered architecture
+type = layers
+containers = appbasics
+layers =
+  cli
+  testmodel
+  app
+  rdb
+  utilities
