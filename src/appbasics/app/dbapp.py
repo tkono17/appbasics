@@ -18,10 +18,8 @@ class DbApp:
     def init(self, rdbService: RdbAccess):
         self.rdbService = rdbService
         dotenv.load_dotenv('.env')
-        print(os.environ)
         if 'DB_URL' in os.environ:
             db_url = os.environ['DB_URL']
-            print('connected')
             self.rdbService.connectDb(db_url)
 
     def initDb(self):
