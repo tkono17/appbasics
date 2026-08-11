@@ -15,7 +15,6 @@ def getEngine():
     global dbEngine
     return dbEngine
 
-
 class TableAccess[TDb, TPublic, TCreate, TUpdate]:
     def __init__(self, tdb: type[TDb], 
                  tpublic: type[TPublic], 
@@ -43,14 +42,14 @@ class TableAccess[TDb, TPublic, TCreate, TUpdate]:
             log.info(f'  created {data_db}')
         return data_db
 
-    def get(self, id: int, engine: Engine) -> TPublic|None:
+    def get(self, id: int, engine: Engine) -> TDb|None:
         data = None
         with Session(engine) as session:
             data = session.get(self.TDb, id)
         return data
     
     def getall(self, engine: Engine, selectModifier=None, 
-               offset: int = 0, limit: int = 100) -> list[TPublic]:
+               offset: int = 0, limit: int = 100) -> list[TDb]:
         statement = select(self.TDb).offset(offset).limit(limit)
         #log.info(f'statement (before modify): {statement}')
         if selectModifier is not None:
@@ -59,7 +58,7 @@ class TableAccess[TDb, TPublic, TCreate, TUpdate]:
         v = []
         with Session(engine) as session:
             results = session.exec(statement)
-            v = results.all()
+            v = list(results.all())
         return v
     
     def getone(self, engine: Engine, selectModifier=None) -> Optional[TPublic]:
@@ -74,17 +73,23 @@ class TableAccess[TDb, TPublic, TCreate, TUpdate]:
             x = v[0]
         return x
     
-    def update(self, id: int, data: TUpdate, engine: Engine) -> TPublic:
+    def update(self, id: int, data: TUpdate, engine: Engine) -> TPublic|None:
         data_db = self.get(id, engine=engine)
         if data_db is None:
             log.warning(f'Entry id={id} not found in {self.TDb.__name__}')
             return None
-        #data_update = dict(filter(lambda x: x[1] is not None, data.model_dump(exclude_unset=True).items()))
         data_update = data.model_dump(exclude_unset=True)
+        if hasattr(data_update, 'updateTime'):
+            data_update.updateTime = '2026-08-13T11:20:35'
         data_db.sqlmodel_update(data_update)
         with Session(engine) as session:
             session.add(data_db)
-            session.commit()
+            try:
+                session.commit()
+            except IntegrityError as e:
+                log.warning(f'  update failed with exception: {e}')
+                session.rollback()
+                return None
             session.refresh(data_db)
         return data_db
     
