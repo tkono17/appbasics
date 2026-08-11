@@ -12,6 +12,8 @@ class DbApp:
         self.rdbService = None
         self.tableItems = {}
         self.currentTableItem = {}
+        # Options
+        self.useEditor = False
 
     def init(self, rdbService: RdbAccess):
         self.rdbService = rdbService
