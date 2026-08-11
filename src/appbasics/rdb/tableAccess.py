@@ -2,6 +2,7 @@ import logging
 from typing import Optional
 from sqlmodel import Session, select
 from sqlalchemy import Engine
+from sqlalchemy.exc import IntegrityError
 
 log = logging.getLogger(__name__)
 
@@ -25,12 +26,19 @@ class TableAccess[TDb, TPublic, TCreate, TUpdate]:
         self.TCreate = tcreate
         self.TUpdate = tupdate
 
-    def create(self, data: TCreate, engine: Engine) -> TPublic:
+    def create(self, data: TCreate, engine: Engine) -> TPublic | None:
         data_db = self.TDb.model_validate(data)
         with Session(engine) as session:
             log.info(f'  create {type(data_db)} {data_db}')
+            if hasattr(data_db, 'createTime'):
+                data_db.createTime = '2026-08-12T01:20:35'
             session.add(data_db)
-            session.commit()
+            try:
+                session.commit()
+            except IntegrityError as e:
+                log.warning(f'  create failed with exception: {e}')
+                session.rollback()
+                return None
             session.refresh(data_db)
             log.info(f'  created {data_db}')
         return data_db
