@@ -42,14 +42,14 @@ class TableAccess[TDb, TPublic, TCreate, TUpdate]:
             log.info(f'  created {data_db}')
         return data_db
 
-    def get(self, id: int, engine: Engine) -> TDb|None:
+    def get(self, id: int, engine: Engine) -> TPublic|None:
         data = None
         with Session(engine) as session:
             data = session.get(self.TDb, id)
         return data
     
     def getall(self, engine: Engine, selectModifier=None, 
-               offset: int = 0, limit: int = 100) -> list[TDb]:
+               offset: int = 0, limit: int = 100) -> list[TPublic]:
         statement = select(self.TDb).offset(offset).limit(limit)
         #log.info(f'statement (before modify): {statement}')
         if selectModifier is not None:
