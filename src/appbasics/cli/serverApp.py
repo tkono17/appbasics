@@ -7,7 +7,7 @@ log = logging.getLogger(__name__)
 
 def parseArgs():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-a', '--appPath', dest='app',
+    parser.add_argument('-a', '--appPath', dest='appPath',
                         type=str, default='appbasics.dbapp:main',
                         help='Server application class')
     parser.add_argument('--host', dest='host',
