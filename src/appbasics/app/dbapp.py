@@ -37,6 +37,7 @@ class DbApp:
         else:
             self.tableItems[tableName] = []
             self.currentTableItem[tableName] = None
+        return x
 
     def update(self, tableName: str, id: int, **kwargs):
         if self.rdbService is None:
@@ -50,6 +51,7 @@ class DbApp:
             log.info(f'  update id={id} -> failed')
             self.tableItems[tableName] = []
             self.currentTableItem[tableName] = None
+        return x
 
     def get(self, tableName: str, id: int):
         if self.rdbService is None:
@@ -63,6 +65,7 @@ class DbApp:
             log.info(f'  get id={id} -> nothing returned')
             self.tableItems[tableName] = []
             self.currentTableItem[tableName] = None
+        return x
         
     def getall(self, tableName: str, **kwargs):
         if self.rdbService is None:
@@ -81,6 +84,7 @@ class DbApp:
             log.info(f'  getall {tableName} -> nothing returned')
             self.tableItems[tableName] = []
             self.currentTableItem[tableName] = None
+        return v
 
     def delete(self, tableName: str, id: int):
         if self.rdbService is None:
@@ -92,3 +96,4 @@ class DbApp:
             x1 = self.currentTableItem[tableName] if tableName in self.currentTableItem else None
             self.tableItems[tableName] = [ x for x in v1 if x.id != id ]
             self.currentTableItem[tableName] = None if x1 is None else x1 if x1.id == id else x1
+        return status
