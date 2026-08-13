@@ -22,6 +22,7 @@ build-backend = "hatchling.build"
 [project.scripts]
 apb-managedb = "appbasics.cli.managedb:main"
 dbapp-run = "appbasics.cli.dbappRun:main"
+apb-server-run = "appbasics.cli.serverApp:main"
 
 [tool.hatch.build.targets.wheel]
 packages = [ "src/appbasics" ]
