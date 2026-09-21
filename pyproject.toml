@@ -19,6 +19,7 @@ build-backend = "hatchling.build"
 
 [project.scripts]
 apb-managedb = "appbasics.cli.managedb:main"
+apb-inspect = "appbasics.cli.inspect:main"
 
 [tool.hatch.build.targets.wheel]
 packages = [ "src/appbasics" ]
