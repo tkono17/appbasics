@@ -1,13 +1,10 @@
 from dataclasses import fields
 from pydantic import BaseModel
 import typing
-from typing import get_args
+from typing import get_args, TypeVar
 import logging
-from .typeInspection import getTypeInspection
 
 log = logging.getLogger(__name__)
-
-Type = typing.Type('Type')
 
 class TypeInspection:
     def __init__(self, T):
