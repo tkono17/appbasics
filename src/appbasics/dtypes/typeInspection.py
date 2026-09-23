@@ -3,13 +3,13 @@ from pydantic import BaseModel
 import typing
 from typing import get_args
 import logging
-from .modelInspection import getModelInspection
+from .typeInspection import getTypeInspection
 
 log = logging.getLogger(__name__)
 
 Type = typing.Type('Type')
 
-class ModelInspection:
+class TypeInspection:
     def __init__(self, T):
         self.T = T
         pass
@@ -29,10 +29,6 @@ class ModelInspection:
         v['fieldNamesWithDefaults'] = self.fieldNamesWithDefaults()
         return v
 
-    def fieldExists(self, fieldName: str) -> bool:
-        v = False
-        return v
-    
     def fieldTypes(self, fieldName: str) -> list[Type]:
         v = []
         return v
@@ -46,9 +42,11 @@ class ModelInspection:
         return v
     
     def dump(self) -> None:
-        pass
+        info = self.summary()
+        for key in info:
+            log.info(f'{key}: {info[key]}')
 
-class ModelInspection_BaseModel(ModelInspection):
+class TypeInspection_BaseModel(TypeInspection):
     def __init__(self, T):
         super().__init__(T)
         pass
@@ -71,17 +69,41 @@ class ModelInspection_BaseModel(ModelInspection):
                     v.append(name)
         return v
 
-    def dump(self) -> None:
-        keys = self.T.model_fields.keys()
-        log.info(f'ModelInspection (BaseModel):')
-        finspector = None
-        for key in keys:
-            field = self.T.model_fields[key]
-            if finspector is None:
-                finspector = getFieldInspection(field)
-            log.info(f'  {key}: {field} ({field.__class__.__name__})')
+    def fieldTypes(self, fieldName: str) -> list[Type]:
+        v = []
+        if self.T is None:
+            pass
+        else:
+            field = self.T.model_fields.get(fieldName)
+            if field is not None:
+                v = get_args(field.annotation)
+        return v
 
-class ModelInspection_dataclass(ModelInspection):
+    def fieldHasDefault(self, fieldName: str) -> bool:
+        v = False
+        if self.T is None:
+            pass
+        else:
+            field = self.T.model_fields.get(fieldName)
+            if field is not None:
+                v = field.default is not None or field.default_factory is not None
+        return v
+
+    def fieldDefaultValue(self, fieldName: str) -> typing.Any:
+        v = None
+        if self.T is None:
+            pass
+        else:
+            field = self.T.model_fields.get(fieldName)
+            if field is not None:
+                if field.default is not None:
+                    v = field.default
+                elif field.default_factory is not None:
+                    v = field.default_factory()
+        return v
+
+
+class TypeInspection_dataclass(TypeInspection):
     def __init__(self, T):
         super().__init__(T)
         pass
@@ -98,18 +120,20 @@ class ModelInspection_dataclass(ModelInspection):
             v = list(self.T.__dataclass_fields__.keys())
         return v
 
-    def dump(self):
-        keys = self.T.__dataclass_fields__.keys()
-        log.info(f'ModelCheck:')
-        for key in keys:
-            log.info(f'  {key}: {self.T.__dataclass_fields__[key]}')
+#----------------------------------------------------------------------------
 
 def isBaseModel(obj):
     log.info(f'isSqlModel: {dir(obj)}')
     return issubclass(obj, BaseModel)
 
-def getModelInspection(obj) -> ModelInspection:
+def isDataclass(obj):
+    log.info(f'isDataclass: {dir(obj)}')
+    return hasattr(obj, '__dataclass_fields__')
+
+def getTypeInspection(obj) -> TypeInspection:
     if isBaseModel(obj):
-        return ModelInspection_BaseModel(obj)
+        return TypeInspection_BaseModel(obj)
+    elif isDataclass(obj):
+        return TypeInspection_dataclass(obj)
     else:
-        return ModelInspection_dataclass(obj)
+        return TypeInspection(obj)
