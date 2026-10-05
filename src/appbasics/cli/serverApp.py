@@ -22,7 +22,7 @@ def parseArgs():
     return parser.parse_args()
 
 def createWebApp(app):
-    idot = app.rfind('.')
+    idot = app.rfind('.')   
     app = None
     if idot >= 0:
         moduleName = app[:idot]
