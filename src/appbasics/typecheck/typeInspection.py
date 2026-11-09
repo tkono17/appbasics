@@ -15,17 +15,6 @@ class TypeInspection:
         v = []
         return v
 
-    def fieldNamesWithDefaults(self) -> list[str]:
-        v = []
-        return v
-
-    def summary(self):
-        v = {}
-        v['type'] = self.T.__name__
-        v['allFieldNames'] = self.allFieldNames()
-        v['fieldNamesWithDefaults'] = self.fieldNamesWithDefaults()
-        return v
-
     def fieldTypes(self, fieldName: str) -> list[Type]:
         v = []
         return v
@@ -36,6 +25,37 @@ class TypeInspection:
 
     def fieldDefaultValue(self, fieldName: str) -> typing.Any:
         v = None
+        return v
+
+    def summary(self):
+        v = {}
+        v['type'] = self.T.__name__
+        v['allFieldNames'] = self.allFieldNames()
+        v['fieldNamesWithDefaults'] = self.fieldNamesWithDefaults()
+        return v
+
+    def fieldNamesWithDefaults(self) -> list[str]:
+        v = []
+        all_names = self.allFieldNames()
+        for fieldName in all_names:
+            if self.fieldHasDefault(fieldName):
+                v.append(fieldName)
+        return v
+    
+    def dataCreate(self) -> dict:
+        v = {}
+        for fieldName in self.allFieldNames():
+            if not self.fieldHasDefault(fieldName):
+                v[fieldName] = None
+        for fieldName in self.allFieldNames():
+            if self.fieldHasDefault(fieldName):
+                v[fieldName] = self.fieldDefaultValue(fieldName)
+        return v
+
+    def dataUpdate(self) -> dict:
+        v = {}
+        for fieldName in self.allFieldNames():
+            v[fieldName] = None
         return v
     
     def dump(self) -> None:
@@ -54,16 +74,6 @@ class TypeInspection_BaseModel(TypeInspection):
             pass
         else:
             v = list(self.T.model_fields.keys())
-        return v
-
-    def fieldNamesWithDefaults(self) -> list[str]:
-        v = []
-        if self.T is None:
-            pass
-        else:
-            for name, field in self.T.model_fields.items():
-                if field.default is not None or field.default_factory is not None:
-                    v.append(name)
         return v
 
     def fieldTypes(self, fieldName: str) -> list[Type]:
@@ -90,13 +100,18 @@ class TypeInspection_BaseModel(TypeInspection):
         v = None
         if self.T is None:
             pass
-        else:
+        elif self.fieldHasDefault(fieldName):
             field = self.T.model_fields.get(fieldName)
             if field is not None:
                 if field.default is not None:
                     v = field.default
                 elif field.default_factory is not None:
                     v = field.default_factory()
+        else:
+            types = self.fieldTypes(fieldName)
+            if len(types) > 0:
+                T = types[0]
+                v = T()
         return v
 
 
@@ -105,16 +120,50 @@ class TypeInspection_dataclass(TypeInspection):
         super().__init__(T)
         pass
 
-    def defaultValue(self):
-        x = None
-        return None
-    
-    def allFieldNames(self):
+    def allFieldNames(self) -> list[str]:
         v = []
         if self.T is None:
             pass
         else:
             v = list(self.T.__dataclass_fields__.keys())
+        return v
+
+    def fieldTypes(self, fieldName: str) -> list[Type]:
+        v = []
+        if self.T is None:
+            pass
+        else:
+            field = self.T.model_fields.get(fieldName)
+            if field is not None:
+                v = get_args(field.annotation)
+        return v
+
+    def fieldHasDefault(self, fieldName: str) -> bool:
+        v = False
+        if self.T is None:
+            pass
+        else:
+            field = self.T.__dataclass_fields__.get(fieldName)
+            if field is not None:
+                v = field.default is not None or field.default_factory is not None
+        return v
+
+    def fieldDefaultValue(self, fieldName: str) -> typing.Any:
+        v = None
+        if self.T is None:
+            pass
+        elif self.fieldHasDefault(fieldName):
+            field = self.T.__dataclass_fields__.get(fieldName)
+            if field is not None:
+                if field.default is not None:
+                    v = field.default
+                elif field.default_factory is not None:
+                    v = field.default_factory()
+        else:
+            types = self.fieldTypes(fieldName)
+            if len(types) > 0:
+                T = types[0]
+                v = T()
         return v
 
 #----------------------------------------------------------------------------
